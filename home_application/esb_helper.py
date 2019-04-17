@@ -147,7 +147,8 @@ def run_script_and_get_log_content(biz_id, script, ip_list, username):
     else:
         return ""
 
-def cc_search_host(biz_id, ip_list, username = "admin"):
+
+def cc_search_host(biz_id, set_id, ip_list, username):
     '''
     查询主机
     :param biz_id: 业务ID，int
@@ -174,24 +175,34 @@ def cc_search_host(biz_id, ip_list, username = "admin"):
             "condition": []
         },
         {
-            "bk_obj_id":"biz",
-            "fields":["bk_biz_id","bk_biz_name"],
+            "bk_obj_id": "biz",
+            "fields": ["bk_biz_id","bk_biz_name"],
             "condition":[
                 {
-            	 	"field": "bk_biz_id",
-                	"operator": "$eq",
-                	"value": int(biz_id)
-            	 }
+                    "field": "bk_biz_id",
+                    "operator": "$eq",
+                    "value": int(biz_id)
+                }
+            ]
+        },
+        {
+            "bk_obj_id": "set",
+            "fields": ["bk_set_id", "bk_set_name"],
+            "condition": [
+                {
+                    "field": "bk_set_id",
+                    "operator": "$eq",
+                    "value": int(set_id)
+                }
             ]
         }
-        
     ],
-    "page": {
-        "start": 0,
-        "limit": 10,
-        "sort": "bk_host_id"
-    },
-    "pattern": ""
+        "page": {
+            "start": 0,
+            "limit": 10,
+            "sort": "bk_host_id"
+        },
+        "pattern": ""
     }
     # endregion
     
@@ -201,7 +212,7 @@ def cc_search_host(biz_id, ip_list, username = "admin"):
     return result
 
 
-def cc_search_set(biz_id, username='admin'):
+def cc_search_set(biz_id, username):
     '''
     查询集群
     :param biz_id: 业务ID，int
@@ -218,7 +229,7 @@ def cc_search_set(biz_id, username='admin'):
         "bk_username": username,
         "bk_biz_id": int(biz_id),
         "fields": [
-            "bk_set_name"
+            "bk_set_name", "bk_set_id"
         ],
         "condition": search,
         "page": {

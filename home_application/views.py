@@ -3,6 +3,7 @@ import json
 
 import requests
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 from account.decorators import login_exempt
 from common.mymako import render_mako_context
@@ -94,7 +95,7 @@ def search_set(request):
     :return:
     """
     biz_id = request.GET.get('biz_id')
-    data = cc_search_set(biz_id)
+    data = cc_search_set(biz_id, request.user.username)
     return JsonResponse(data)
 
 
@@ -107,13 +108,41 @@ def search_host(request):
     get请求获取的ip_list，转换成列表，请调用get_host_ip_list
     :return:
     """
-    biz_id = request.GET.get('biz_id')
+    content = json.loads(request.body)
+    bk_biz_id = content['biz_id']
+    bk_set_id = 7
     ip_list = []
-    if 'ip' in request.GET:
-        ip = request.GET.get('ip')
-        ip_list = get_host_ip_list(ip)
-    data = cc_search_host(biz_id,ip_list)
-    return JsonResponse(data)
+    if 'iplist' in content:
+        ip_list = content['iplist']
+    if 'set_id' in content:
+        bk_set_id = content['set_id']
+    data = cc_search_host(bk_biz_id, bk_set_id, ip_list, request.user.username)
+    print 'dddd', data
+    host_data = []
+    if data["result"]:
+        pass
+        for item in data['data']['info']:
+            if item['host']['bk_os_type'] == '1':
+                bk_os_type = 'Linux'
+            elif item['host']['bk_os_type'] == '2':
+                bk_os_type = 'Windows'
+            data_dict = {
+                'bk_host_innerip': item['host']['bk_host_innerip'],
+                'bk_os_name': item['host']['bk_os_name'],
+                'bk_host_name': item['host']['bk_host_name'],
+                'area': item['host']['bk_cloud_id'][0]['bk_inst_name'],
+                'bk_cloud_id': item['host']['bk_cloud_id'][0]['bk_inst_id'],
+                'bk_os_type': bk_os_type,
+                'bk_biz_id': item['biz'][0]['bk_biz_id'],
+                'bk_biz_name': item['biz'][0]['bk_biz_name'],
+                'remark': '蓝鲸服务器',
+                'men_rate': '--',
+                'disk_rate': '--',
+                'cpu_rate': '--',
+                'is_monitor': False
+            }
+            host_data.append(data_dict)
+    return JsonResponse({'result': True, 'data': host_data})
 
 
 def fast_execute_script(request):
